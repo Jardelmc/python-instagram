@@ -2,12 +2,17 @@ from instabot import Bot
 import os
 import sys
 
-sys.path.append(os.path.join(sys.path[0], "../../"))
+
+sys.path.append(os.path.join(sys.path[0], "../"))
 
 
-def init(username, password):
+def login(username, password):
+
     try:
         os.mkdir('./payload')
+    except:
+        pass
+    try:
         os.mkdir('./payload/{}'.format(username))
     except:
         pass
@@ -54,10 +59,14 @@ def init(username, password):
 
     try:
         isLogged = bot.login(username=username, password=password)
-        if isLogged == True:
+
+        if isLogged != False:
+            print('BOT LOGOU')
             return bot
         else:
             return False
 
     except:
+        print('Deu merda aqui')
+        print(sys.exc_info())
         return False

@@ -37,8 +37,11 @@ def getUsersFromHashTag(bot, hashtags):
             tags.items(), key=lambda kv: kv[1], reverse=True)
 
         usersFoundByHashtag = []
-        limitHashtag = 100
+        limitHashtag = 10
         countForLimit = 0
+        allIsertedUsersByControl = bot.get_user_following(bot.user_id)
+
+        print('Teste {}'.format(allIsertedUsersByControl))
 
         for tag in sorted_by_value:
 
@@ -49,10 +52,14 @@ def getUsersFromHashTag(bot, hashtags):
                 countForLimit = countForLimit = 1
 
             if tag[1] < 1000:  # Pegando apenas hashtagas com menos de 1000 perfis cada uma
+
                 print('Fazendo busca por {}'.format(tag[0]))
                 usersByHashtah = bot.get_hashtag_users(tag[0])
+
                 for v in usersByHashtah:
-                    users.append(v)
+                    if v not in allIsertedUsersByControl:  # Se ainda nao foi inserido antes
+                        users.append(v)
+                        allIsertedUsersByControl.append(v)
 
                 colletedData = {"provider": tag[0], "users": users}
                 usersFoundByHashtag.append(colletedData)
