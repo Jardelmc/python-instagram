@@ -10,6 +10,11 @@ sys.path.append(os.path.join(sys.path[0], "../../"))
 
 secondsInOneDay = 60 * 60 * 16  # 16 horas de trabalho
 
+'''
+Por enquanto não estou fazendo nenhum post para o servidor NODE informando os usuários que deixaram de seguir.
+'''
+# Parametros so serao passados quando implementar serviço de post
+
 
 def runUnfollowService(bot, listOfProfilesId, token, nodeServerURL):
     try:
@@ -21,6 +26,9 @@ def runUnfollowService(bot, listOfProfilesId, token, nodeServerURL):
 
         # Lista para adicionar todos seguidos
         allUnfollowedProfiles = []
+
+        # Para printar a quantidade de unfollows com sucesso
+        countFollowedProfiles = 0
 
         while len(listOfProfilesId) > 0:
             # Escolhendo numero de perfis a deixarem de ser seguidos por safra
@@ -34,13 +42,32 @@ def runUnfollowService(bot, listOfProfilesId, token, nodeServerURL):
                 profilesPerSafra))
 
             partialSafra = []
+
+            # Variável para contar quantos erros deram
+            countUnfollowError = 0
+
             # Fazendo o loop para deixar de seguir a quantidade selecionada por safra
             for i in range(profilesPerSafra):
                   # Sorteando um perfil aleatório na lista diária
                 profileSorted = random.choice(listOfProfilesId)
 
                 # Mandando seguir
-                bot.unfollow(profileSorted)
+                checkIfHasUnfollow = bot.unfollow(profileSorted)
+
+                if checkIfHasUnfollow == True:
+                    # Adicionando safra atual a lista de todos perfis seguidos
+                    allUnfollowedProfiles.append(partialSafra)
+
+                    countFollowedProfiles += 1
+                    print(
+                        'USER> {} -- PERFIS DEIXADOS DE SEGUIR HOJE: {}'.format(bot.username, countFollowedProfiles))
+
+                else:
+                    print(
+                        'Falha ao dar unfollow no usuário -- USER: {}'.format(bot.username))
+                    print(
+                        'Quantidade de erros em Unfollow hoje: {}'.format(countUnfollowError))
+                    countUnfollowError += 1
 
                 # Removendo usuário seguido da lista principal
                 listOfProfilesId.remove(profileSorted)
@@ -52,15 +79,12 @@ def runUnfollowService(bot, listOfProfilesId, token, nodeServerURL):
             print('Fim da safra atual, ainda restam {} perfis para deixar de serem seguidos'.format(
                 len(listOfProfilesId)))
 
-            # Adicionando safra atual a lista de todos perfis seguidos
-            allUnfollowedProfiles.append(partialSafra)
-
             # Média de segudos * quantidade de perfis por safra
             timeSleepBetweenSafra = meansSecondBetweenFollows * profilesPerSafra
 
             # Randomizando 70 segundos para + ou -
             timeSleepBetweenSafra = random.uniform(
-                (timeSleepBetweenSafra - 70), (timeSleepBetweenSafra + 70))
+                (timeSleepBetweenSafra - 650), (timeSleepBetweenSafra + 650))
 
             timeOfEnd = datetime.datetime.now()
             print('O sistema vai dormir por {} minutos a partir de agora. --DIALY UNFOLLOW-- HORA: {}'.format(
@@ -68,12 +92,18 @@ def runUnfollowService(bot, listOfProfilesId, token, nodeServerURL):
 
             time.sleep(timeSleepBetweenSafra)  # Sleep
 
+        print(
+            'TÉRMINO DO SERVIÇO DE UNFOLLOW DIALY -- USER> {} -- QUANTIDADE DE UNFOLLOWS: {}'.format(
+                bot.username, countFollowedProfiles))
+
+    except:
+        return False
+
+    """
         try:
             requests.post('{nodeServerURL}/endDialyUnfollow', headers=token,
                           data={'followedProfiles': allUnfollowedProfiles})
         except:
             print('Erro ao enviar lista de Dialy Follow. HORA: {}'.format(
                 datetime.datetime.now()))
-
-    except:
-        return False
+    """

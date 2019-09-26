@@ -5,6 +5,7 @@ import time
 import datetime
 import random
 import requests
+import json
 
 sys.path.append(os.path.join(sys.path[0], "../../"))
 
@@ -12,15 +13,29 @@ secondsInOneDay = 60 * 60 * 16  # 16 horas de trabalho
 
 
 # Metodo para salvar safra atual, para caso de erro, nao perder quem ja foi seguido
-def savePartialSafra(userPk, token, safra, nodeServerURL):
+def savePartialSafra(userPk, headers, safra, nodeServerURL):
+    if len(safra) == 0:
+        print('Nenhum perfil foi seguido nesta safra, requisição POST não será realizada')
+        return
+
     try:
+        data = {'safra': safra}
+
         response = requests.post(
-            '{nodeServerURL}/partialSafra', headers=token, data={'safraFollowed': safra})
-    except:
+            '{}/partialSafra'.format(nodeServerURL), headers=headers, json=data)
+
+        if response.status_code == 200:
+            print('Safra salva com sucesso no servidor NODE')
+        else:
+            print('Falha ao salvar a safra')
+            print(response.text)
+    except Exception as e:
+        print('Falha no try-cath da função savePartialSafra -- FollowDialy')
+        print(e)
         pass
 
 
-def runFollowService(bot, listOfProfilesId, token, nodeServerURL):
+def runFollowService(bot, listOfProfilesId, headers, nodeServerURL):
     try:
         print('Iniciando serviço de Follow Diário às {}'.format(
             datetime.datetime.now()))
@@ -31,9 +46,14 @@ def runFollowService(bot, listOfProfilesId, token, nodeServerURL):
         # Lista para adicionar todos seguidos
         allFollowedProfiles = []
 
+        # Para contar quantos perfis foram seguidos
+        countFollowedProfiles = 0
+
         while len(listOfProfilesId) > 0:
             # Escolhendo numero de perfis a serem seguidos por safra
-            profilesPerSafra = random.randint(5, 16)
+            profilesPerSafra = random.randint(8, 16)
+
+           # profilesPerSafra = 2  # TESTE --------- REMOVER LINHA
 
             # Para nao quebrar o ciclo de index do vetor
             if profilesPerSafra >= len(listOfProfilesId):
@@ -42,57 +62,59 @@ def runFollowService(bot, listOfProfilesId, token, nodeServerURL):
             print('Safra atual é de {} perfis para serem seguidos'.format(
                 profilesPerSafra))
 
+            # Variável para salvar todos perfis que deram sucesso ao seguir
             partialSafra = []
+
             # Fazendo o loop para seguir a quantidade selecionada por safra
             for i in range(profilesPerSafra):
-                  # Sorteando um perfil aleatório na lista diária
+
+                # Sorteando um perfil aleatório na lista diária
                 profileSorted = random.choice(listOfProfilesId)
+                print('PROFILE SORTED: {}'.format(profileSorted))
 
-                # Mandando seguir
-                bot.follow(profileSorted)
+                # Mandando seguir | Retorna True ou False de acordo com o sucesso no follow
+                checkIfHasFollow = bot.follow(profileSorted)
 
-                # Adicionando usuario seguido na safra parcial
-                partialSafra.append(profileSorted)
+                if checkIfHasFollow != False:
+                    # Adicionando usuario seguido na safra parcial
+                    partialSafra.append(profileSorted)
+
+                    countFollowedProfiles += 1
+                    print(
+                        'USER> {} -- PERFIS SEGUIDOS HOJE: {}'.format(bot.username, countFollowedProfiles))
+
+                    # Dormingo por mini follow quando dá sucesso
+                    timeSleepInMs = random.uniform(11, 25)
+                    time.sleep(timeSleepInMs)
 
                 # Removendo usuário seguido da lista principal
                 listOfProfilesId.remove(profileSorted)
-
-                # Dormingo por mini follow
-                timeSleepInMs = random.uniform(11, 25)
-                time.sleep(timeSleepInMs)
 
             print('Fim da safra atual, ainda restam {} perfis'.format(
                 len(listOfProfilesId)))
 
             # Salvando safra temporaria
-            savePartialSafra(bot.user_id, token, partialSafra, nodeServerURL)
+            savePartialSafra(bot.user_id, headers, partialSafra, nodeServerURL)
 
-            # Adicionando safra atual a lista de todos perfis seguidos
-            allFollowedProfiles.append(partialSafra)
-
-            # Média de segudos * quantidade de perfis por safra
-            timeSleepBetweenSafra = meansSecondBetweenFollows * profilesPerSafra
+            # Média de segudos * quantidade de perfis seguidos com sucesso por safra
+            timeSleepBetweenSafra = meansSecondBetweenFollows * \
+                len(partialSafra)
 
             # Randomizando 70 segundos para + ou -
             timeSleepBetweenSafra = random.uniform(
-                (timeSleepBetweenSafra - 70), (timeSleepBetweenSafra + 70))
+                (timeSleepBetweenSafra - 650), (timeSleepBetweenSafra + 650))
 
             timeOfEnd = datetime.datetime.now()
-            print('O sistema vai dormir por {} minutos a partir de agora. HORA: {}'.format(
-                int(timeSleepBetweenSafra/60), timeOfEnd))
+            print('USER> {} -- FOLLOW DIALY -- O sistema vai dormir por {} minutos a partir de agora. HORA: {}'.format(
+                bot.username, int(timeSleepBetweenSafra/60), timeOfEnd))
 
             time.sleep(timeSleepBetweenSafra)  # Sleep
 
-        try:
-            requests.post('{nodeServerURL}/endDialyFollow', headers=token,
-                          data={'followedProfiles': allFollowedProfiles})
-        except:
-            print('Erro ao enviar lista de Dialy Follow. HORA: {}'.format(
-                datetime.datetime.now()))
+        now = datetime.datetime.now()
+        print('TÉRMINO DE DIALY FOLLOW -- USER> {} - QTD PERFIS SEGUIDOS: {} - HORA: {}'.format(
+            bot.username, countFollowedProfiles, now))
 
     except:
+        now = datetime.datetime.now()
+        print('Erro no serviço de follow dialy -- USER> {} -- HORA: {}'.format(bot.username, now))
         return False
-
-
-def savePartialSafra(userPk, token, safra, nodeServerURL):
-    response = requests.post('{nodeServerURL}/partialSafra', headers=token)

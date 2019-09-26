@@ -32,7 +32,6 @@ def login(username, password):
     filter_business_accounts = True
     filter_verified_accounts = True
     min_media_count_to_follow = 4
-    stop_words = ('loja')
     blacklist_hashtags = ["#loja"]
     blocked_actions_protection = True
     verbosity = True
@@ -52,13 +51,13 @@ def login(username, password):
               filter_business_accounts=filter_business_accounts,
               filter_verified_accounts=filter_verified_accounts,
               min_media_count_to_follow=min_media_count_to_follow,
-              stop_words=stop_words,
               blacklist_hashtags=blacklist_hashtags,
               blocked_actions_protection=blocked_actions_protection,
               verbosity=verbosity)
 
     try:
-        isLogged = bot.login(username=username, password=password)
+        isLogged = bot.login(
+            username=username, password=password, use_cookie=False)
 
         if isLogged != False:
             print('BOT LOGOU')
