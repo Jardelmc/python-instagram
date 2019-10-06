@@ -87,6 +87,12 @@ def runFollowService(bot, listOfProfilesId, headers, nodeServerURL):
                     timeSleepInMs = random.uniform(11, 25)
                     time.sleep(timeSleepInMs)
 
+                    # Mecanismo de segurança
+                    if countFollowedProfiles == 59 or countFollowedProfiles == 119 or countFollowedProfiles == 179:
+                        print(
+                            'PAUSA DE 3 HORAS A CADA 60 PERFIS SEGUIDOS - INÍCIO: {}'.format(datetime.datetime.now()))
+                        time.sleep(60 * 60 * 3)  # Pausa de 3 horas
+
                 # Removendo usuário seguido da lista principal
                 listOfProfilesId.remove(profileSorted)
 
@@ -109,12 +115,6 @@ def runFollowService(bot, listOfProfilesId, headers, nodeServerURL):
                 bot.username, int(timeSleepBetweenSafra/60), timeOfEnd))
 
             time.sleep(timeSleepBetweenSafra)  # Sleep
-
-            # Mecanismo de segurança
-            if countFollowedProfiles == 59 or countFollowedProfiles == 119 or countFollowedProfiles == 179:
-                print(
-                    'PAUSA DE 3 HORAS A CADA 60 PERFIS SEGUIDOS - INÍCIO: {}'.format(datetime.datetime.now()))
-                time.sleep(60 * 60 * 3)  # Pausa de 3 horas
 
         now = datetime.datetime.now()
         print('TÉRMINO DE DIALY FOLLOW -- USER> {} - QTD PERFIS SEGUIDOS: {} - HORA: {}'.format(
