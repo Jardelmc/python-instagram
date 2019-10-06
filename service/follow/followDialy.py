@@ -75,7 +75,7 @@ def runFollowService(bot, listOfProfilesId, headers, nodeServerURL):
                 # Mandando seguir | Retorna True ou False de acordo com o sucesso no follow
                 checkIfHasFollow = bot.follow(profileSorted)
 
-                if checkIfHasFollow != False:
+                if checkIfHasFollow == True:
                     # Adicionando usuario seguido na safra parcial
                     partialSafra.append(profileSorted)
 
@@ -109,6 +109,12 @@ def runFollowService(bot, listOfProfilesId, headers, nodeServerURL):
                 bot.username, int(timeSleepBetweenSafra/60), timeOfEnd))
 
             time.sleep(timeSleepBetweenSafra)  # Sleep
+
+            # Mecanismo de segurança
+            if countFollowedProfiles == 59 or countFollowedProfiles == 119 or countFollowedProfiles == 179:
+                print(
+                    'PAUSA DE 3 HORAS A CADA 60 PERFIS SEGUIDOS - INÍCIO: {}'.format(datetime.datetime.now()))
+                time.sleep(60 * 60 * 3)  # Pausa de 3 horas
 
         now = datetime.datetime.now()
         print('TÉRMINO DE DIALY FOLLOW -- USER> {} - QTD PERFIS SEGUIDOS: {} - HORA: {}'.format(

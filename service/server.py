@@ -99,7 +99,7 @@ async def followDialyService(request):
     bot = loggedProfiles[userId]
 
     threading.Thread(target=followDialy.runFollowService,
-                     args=(bot, profiles, token, NODE_SERVER)).start()
+                     args=(bot, profiles, headers, NODE_SERVER)).start()
 
     return web.json_response({"mensagem": "Ok"})
 
@@ -118,14 +118,14 @@ async def unfollowDialyService(request):
 
     bot = loggedProfiles[userId]
 
-    threading.Thread(target=unfollowDialy.runFollowService,
-                     args=(bot, profiles, token, NODE_SERVER)).start()
+    threading.Thread(target=unfollowDialy.runUnfollowService,
+                     args=(bot, profiles, headers, NODE_SERVER)).start()
 
     return web.json_response({"mensagem": "Ok"})
 
 # Rota para DIRECT
 ####################################################################################
-@routes.post('/unfollowDialy')
+@routes.post('/sendDirect')
 async def directService(request):
     data = await request.json()
 
